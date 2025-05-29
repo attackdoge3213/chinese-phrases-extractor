@@ -21,6 +21,12 @@
             margin: 10px 0;
             padding: 8px 16px;
         }
+        #textInput {
+            width: 100%;
+            height: 200px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
         #output {
             white-space: pre-wrap;
             margin: 20px 0;
@@ -32,9 +38,10 @@
 </head>
 <body>
     <h1>Chinese Phrases Extractor</h1>
-    <p>Upload your document and click "Process" to extract phrases from specific days ago. Then, copy the output to your clipboard.</p>
+    <p>Paste your document in the box below or upload a file, then click 'Process' to extract phrases from specific days ago. If both are provided, the pasted text will be used. Finally, click 'Copy to Clipboard' to copy the output.</p>
+    <textarea id="textInput" placeholder="Paste your document here..."></textarea>
     <input type="file" id="fileInput">
-    <button onclick="processFile()">Process</button>
+    <button onclick="processInput()">Process</button>
     <pre id="output"></pre>
     <button onclick="copyToClipboard()">Copy to Clipboard</button>
 
@@ -115,21 +122,28 @@
             return output.trim();
         }
 
-        function processFile() {
+        function processDocument(document) {
+            const dateData = parseDocument(document);
+            const today = new Date();
+            const output = generateOutput(dateData, today);
+            document.getElementById('output').textContent = output;
+        }
+
+        function processInput() {
+            const textInput = document.getElementById('textInput').value.trim();
             const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            if (file) {
+            if (textInput) {
+                processDocument(textInput);
+            } else if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const document = e.target.result;
-                    const dateData = parseDocument(document);
-                    const today = new Date();
-                    const output = generateOutput(dateData, today);
-                    document.getElementById('output').textContent = output;
+                    processDocument(document);
                 };
                 reader.readAsText(file);
             } else {
-                alert('Please upload a file.');
+                alert('Please paste text or upload a file.');
             }
         }
 
@@ -143,7 +157,7 @@
                     alert('Failed to copy to clipboard.');
                 });
             } else {
-                alert('Nothing to copy. Please process a file first.');
+                alert('Nothing to copy. Please process the input first.');
             }
         }
     </script>
