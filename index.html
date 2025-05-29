@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Phrases Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        p {
+            font-size: 16px;
+        }
+        button {
+            margin: 10px 0;
+            padding: 8px 16px;
+        }
+        #output {
+            white-space: pre-wrap;
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chinese Phrases Extractor</h1>
+    <p>Upload your document and click "Process" to extract phrases from specific days ago. Then, copy the output to your clipboard.</p>
+    <input type="file" id="fileInput">
+    <button onclick="processFile()">Process</button>
+    <pre id="output"></pre>
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+
+    <script>
+        function parseDate(dateStr) {
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"];
+            const [monthName, day, year] = dateStr.split(' ');
+            const monthIndex = monthNames.indexOf(monthName);
+            if (monthIndex === -1) return null;
+            const dayNum = parseInt(day.replace(',', ''), 10);
+            const date = new Date(year, monthIndex, dayNum);
+            return date.toISOString().split('T')[0];
+        }
+
+        function parseDocument(document) {
+            const lines = document.split('\n');
+            const dateData = {};
+            let currentDate = null;
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"];
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed) {
+                    const firstWord = trimmed.split(' ')[0];
+                    if (monthNames.includes(firstWord) && trimmed.includes(' - ')) {
+                        const [dateStr, phrasesStr] = trimmed.split(' - ', 2);
+                        const date = parseDate(dateStr);
+                        if (date) {
+                            if (!dateData[date]) {
+                                dateData[date] = { normal: [], forgotten: [], differences: [] };
+                            }
+                            const phrases = phrasesStr.split(/\s+/);
+                            dateData[date].normal.push(...phrases);
+                            currentDate = date;
+                        }
+                    } else if (trimmed.startsWith('Forgotten:')) {
+                        if (currentDate) {
+                            const forgottenPhrases = trimmed.split(':')[1].trim().split(/\s+/);
+                            dateData[currentDate].forgotten.push(...forgottenPhrases);
+                        }
+                    } else if (trimmed.startsWith('Differences:')) {
+                        if (currentDate) {
+                            const differencesStr = trimmed.split(':')[1].trim();
+                            const differences = differencesStr.split(/\s+/);
+                            dateData[currentDate].differences.push(...differences);
+                        }
+                    }
+                }
+            }
+            return dateData;
+        }
+
+        function generateDaysAgo() {
+            const daysAgo = [1, 2, 3, 4, 5];
+            let next = 10;
+            while (next <= 10000) {
+                daysAgo.push(next);
+                next *= 2;
+            }
+            return daysAgo;
+        }
+
+        function generateOutput(dateData, today) {
+            const daysAgoList = generateDaysAgo();
+            let output = '';
+            for (const daysAgo of daysAgoList) {
+                const targetDate = new Date(today.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+                const dateStr = targetDate.toISOString().split('T')[0];
+                if (dateStr in dateData) {
+                    const data = dateData[dateStr];
+                    const allPhrases = [...data.normal, ...data.forgotten, ...data.differences];
+                    if (allPhrases.length > 0) {
+                        output += `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago:\n${allPhrases.join(' ')}\n\n`;
+                    }
+                }
+            }
+            return output.trim();
+        }
+
+        function processFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const document = e.target.result;
+                    const dateData = parseDocument(document);
+                    const today = new Date();
+                    const output = generateOutput(dateData, today);
+                    document.getElementById('output').textContent = output;
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please upload a file.');
+            }
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output').textContent;
+            if (output) {
+                navigator.clipboard.writeText(output).then(() => {
+                    alert('Copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy to clipboard.');
+                });
+            } else {
+                alert('Nothing to copy. Please process a file first.');
+            }
+        }
+    </script>
+</body>
+</html>
