@@ -57,8 +57,8 @@
             return date.toISOString().split('T')[0];
         }
 
-        function parseDocument(document) {
-            const lines = document.split('\n');
+        function parseDocument(docText) {
+            const lines = docText.split('\n');
             const dateData = {};
             let currentDate = null;
             const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -122,8 +122,8 @@
             return output.trim();
         }
 
-        function processDocument(document) {
-            const dateData = parseDocument(document);
+        function processDocument(docText) {
+            const dateData = parseDocument(docText);
             const today = new Date();
             const output = generateOutput(dateData, today);
             document.getElementById('output').textContent = output;
@@ -138,8 +138,8 @@
                 const file = fileInput.files[0];
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const document = e.target.result;
-                    processDocument(document);
+                    const docText = e.target.result;
+                    processDocument(docText);
                 };
                 reader.readAsText(file);
             } else {
