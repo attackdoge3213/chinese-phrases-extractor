@@ -34,11 +34,18 @@
             border: 1px solid #ccc;
             background-color: #f9f9f9;
         }
+        #dateInput {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Chinese Phrases Extractor</h1>
-    <p>Paste your document in the box below or upload a file, then click 'Process' to extract phrases from specific days ago. If both are provided, the pasted text will be used. Finally, click 'Copy to Clipboard' to copy the output.</p>
+    <p>Paste your document in the box below or upload a file, then click 'Process' to extract phrases from specific days ago based on the entered date. Enter the date in YYYY-MM-DD format (e.g., 2023-10-15). If no date is provided, it uses today's date. Click 'Copy to Clipboard' to copy the output.</p>
+    <label for="dateInput">Enter date (YYYY-MM-DD, optional, defaults to today):</label>
+    <input type="text" id="dateInput" placeholder="e.g., 2023-10-15">
     <textarea id="textInput" placeholder="Paste your document here..."></textarea>
     <input type="file" id="fileInput">
     <button onclick="processInput()">Process</button>
@@ -122,24 +129,34 @@
             return output.trim();
         }
 
-        function processDocument(docText) {
+        function processDocument(docText, today) {
             const dateData = parseDocument(docText);
-            const today = new Date();
             const output = generateOutput(dateData, today);
             document.getElementById('output').textContent = output;
         }
 
         function processInput() {
+            const selectedDate = document.getElementById('dateInput').value.trim();
+            let today;
+            if (selectedDate) {
+                today = new Date(selectedDate);
+                if (isNaN(today.getTime())) {
+                    alert('Invalid date format. Please use YYYY-MM-DD (e.g., 2023-10-15).');
+                    return;
+                }
+            } else {
+                today = new Date();
+            }
             const textInput = document.getElementById('textInput').value.trim();
             const fileInput = document.getElementById('fileInput');
             if (textInput) {
-                processDocument(textInput);
+                processDocument(textInput, today);
             } else if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const docText = e.target.result;
-                    processDocument(docText);
+                    processDocument(docText, today);
                 };
                 reader.readAsText(file);
             } else {
