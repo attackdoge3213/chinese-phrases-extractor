@@ -85,14 +85,14 @@
                             dateData[date].normal.push(...phrases);
                             currentDate = date;
                         }
-                    } else if (trimmed.startsWith('Forgotten:')) {
+                    } else if (trimmed.startsWith('Forgotten：')) {
                         if (currentDate) {
-                            const forgottenPhrases = trimmed.split(':')[1].trim().split(/\s+/);
+                            const forgottenPhrases = trimmed.split('：')[1].trim().split(/\s+/);
                             dateData[currentDate].forgotten.push(...forgottenPhrases);
                         }
-                    } else if (trimmed.startsWith('Differences:')) {
+                    } else if (trimmed.startsWith('Differences：')) {
                         if (currentDate) {
-                            const differencesStr = trimmed.split(':')[1].trim();
+                            const differencesStr = trimmed.split('：')[1].trim();
                             const differences = differencesStr.split(/\s+/);
                             dateData[currentDate].differences.push(...differences);
                         }
